@@ -8,7 +8,7 @@ class Database:
         self.create_tables()
 
     def create_tables(self):
-        # Таблица слотов (расписания)
+        # Таблица слотов для записи
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS slots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT,
@@ -20,13 +20,12 @@ class Database:
         )""")
         self.connection.commit()
 
-    # --- Методы для пользователя ---
     def get_available_dates(self):
         self.cursor.execute("SELECT DISTINCT date FROM slots WHERE is_booked = 0 AND date >= ?", (datetime.now().strftime("%Y-%m-%d"),))
         return [row[0] for row in self.cursor.fetchall()]
 
     def get_available_times(self, date):
-        self.cursor.execute("SELECT id, time FROM slots WHERE date = ? AND is_booked = 0", (date,))
+        self.cursor.execute("SELECT id, time FROM slots WHERE date = ? AND is_booked = 0 ORDER BY time", (date,))
         return self.cursor.fetchall()
 
     def check_user_booking(self, user_id):
@@ -46,17 +45,12 @@ class Database:
         self.cursor.execute("UPDATE slots SET is_booked = 0, user_id = NULL, user_name = NULL, user_phone = NULL WHERE id = ?", (slot_id,))
         self.connection.commit()
 
-    # --- Методы администратора ---
     def add_slot(self, date, time):
         self.cursor.execute("INSERT INTO slots (date, time) VALUES (?, ?)", (date, time))
         self.connection.commit()
 
-    def delete_slot(self, slot_id):
-        self.cursor.execute("DELETE FROM slots WHERE id = ?", (slot_id,))
-        self.connection.commit()
-
     def get_all_slots_by_date(self, date):
-        self.cursor.execute("SELECT id, time, is_booked, user_name FROM slots WHERE date = ?", (date,))
+        self.cursor.execute("SELECT id, time, is_booked, user_name FROM slots WHERE date = ? ORDER BY time", (date,))
         return self.cursor.fetchall()
 
     def close_day(self, date):
@@ -68,7 +62,6 @@ class Database:
         return self.cursor.fetchone()
 
     def get_all_active_bookings(self):
-        # Для восстановления шедулера
         self.cursor.execute("SELECT id, date, time, user_id FROM slots WHERE is_booked = 1")
         return self.cursor.fetchall()
 
