@@ -9,4 +9,5 @@ class BookingStates(StatesGroup):
 class AdminStates(StatesGroup):
     adding_slot_date = State()
     adding_slot_time = State()
+    viewing_date = State()
     closing_day = State()
